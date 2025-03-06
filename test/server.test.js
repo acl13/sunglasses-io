@@ -140,13 +140,46 @@ describe("Login", () => {
 });
 
 describe("Cart", () => {
-  // describe('/GET me/cart', () => {
-  //   it('gets the cart for an authenticated user', () => {
-  //     //arrange: login user/get user cart
-  //     // write test logic here
-  //     done()
-  //   })
-  // })
+  describe("/GET me/cart", () => {
+    it("gets the cart for an authenticated user", (done) => {
+      //arrange: login user/get user cart
+      // write test logic here
+      let login = {
+        username: "yellowleopard753",
+        password: "jonjon",
+      };
+
+      chai
+        .request(server)
+        .post("/login")
+        .send(login)
+        .end((err, res) => {
+          const token = res.header.authorization.split(".")[1];
+          console.log(token);
+          chai
+            .request(server)
+            .get("/me/cart")
+            .set("Authorization", token)
+            .end((err, res) => {
+              res.should.have.status(200);
+              done();
+            });
+        });
+    });
+
+    it("throws error if user is not authenticated", (done) => {
+      //arrange: login user/get user cart
+      // write test logic here
+      chai
+        .request(server)
+        .get("/me/cart")
+        .end((err, res) => {
+          res.should.have.status(401);
+          res.body.message.should.be.eql("Authentication failed");
+          done();
+        });
+    });
+  });
   //
   //
   //

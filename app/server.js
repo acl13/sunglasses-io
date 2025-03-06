@@ -13,17 +13,6 @@ const users = require("../initial-data/users.json");
 const brands = require("../initial-data/brands.json");
 const products = require("../initial-data/products.json");
 
-// const authenticate = (req, res, next) => {
-//   try {
-//     const token = req.headers.authorization.split(" ")[1]; // Bearer <token>
-//     const decoded = jwt.verify(token, "secretKey");
-//     req.userId = decoded.userId;
-//     next();
-//   } catch (error) {
-//     res.status(401).json({ message: "Authentication failed" });
-//   }
-// };
-
 // Error handling
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -35,12 +24,10 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.get("/brands", (request, response) => {
   response.send(brands);
-  return response.end();
 });
 
 app.get("/products", (request, response) => {
   response.send(products);
-  return response.end();
 });
 
 app.get("/brands/:id/products", (request, response) => {
@@ -53,15 +40,10 @@ app.get("/brands/:id/products", (request, response) => {
   if (filteredProducts.length === 0) {
     response.status(404);
     response.send({ message: "No products found" });
-    return response.end();
   } else {
     response.send(filteredProducts);
-    return response.end();
   }
 });
-
-let token = jwt.sign("user", "secretKey");
-console.log(token);
 
 app.post("/login", (request, response) => {
   const { username, password } = request.body;
@@ -73,19 +55,44 @@ app.post("/login", (request, response) => {
   if (!username || !password) {
     response.status(401);
     response.send({ message: "Both a username and password are required" });
-    return response.end();
   }
 
   if (user) {
-    let token = jwt.sign({ user }, "secretKey", { expiresIn: "1hr" });
+    try {
+      let token = jwt.sign({ user }, "secretKey", { expiresIn: "1hr" });
+    } catch (err) {
+      console.log(err);
+    }
     response.status(200);
     response.set("Authorization", token);
     response.send(user);
-    return response.end();
   } else {
     response.status(401);
     response.send({ message: "Incorrect username or password" });
-    return response.end();
+  }
+});
+
+const authenticateUser = (req, res, next) => {
+  try {
+    const token = req.header.authorization.split(" ")[1]; // Bearer <token>
+    const decoded = jwt.verify(token, "secretKey");
+    req.body.username = decoded.username;
+    next();
+  } catch (error) {
+    res.status(401);
+    res.send({ message: "Authentication failed" });
+  }
+};
+
+app.get("/me/cart", authenticateUser, (request, response) => {
+  const user = users.find((user) => user.username == request.body.username);
+
+  if (!user) {
+    response.status(404);
+    response.send({ message: "User not found" });
+  } else {
+    response.status(200);
+    response.send(user.cart);
   }
 });
 
