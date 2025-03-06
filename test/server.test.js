@@ -22,12 +22,19 @@ describe("Brands", () => {
     });
   });
 
-  // describe('/GET brands/:id/products', () => {
-  //   it('should GET all the products for a specific brand', (done) => {
-  //     // Write test logic here
-  //     (done);
-  //   })
-  // })
+  describe("/GET brands/:id/products", () => {
+    it("should GET all the products for a specific brand", (done) => {
+      chai
+        .request(server)
+        .get("/brands/1/products")
+        .end((err, res) => {
+          res.should.have.status(200);
+          res.body.should.be.an("array");
+          res.body.length.should.be.eql(3);
+          done();
+        });
+    });
+  });
 });
 
 describe("Products", () => {
@@ -49,6 +56,7 @@ describe("Products", () => {
 describe("Login", () => {
   // describe("/POST login", () => {
   //   it("logs in an authenticated user", (done) => {
+  //get login info from request params
   //     //Write test logic here
   //     done();
   //   });

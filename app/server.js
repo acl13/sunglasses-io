@@ -32,6 +32,17 @@ app.get("/products", (request, response) => {
   return response.end();
 });
 
+app.get("/brands/:id/products", (request, response) => {
+  // Get all products that match the brand id
+  // The sample data provided has a categoryId property that aligns with the brand id numbers - I think it would be better named "brandId" but chose not to change the existing data
+  const filteredProducts = products.filter((product) => {
+    return product.categoryId == request.params.id;
+  });
+
+  response.send(filteredProducts);
+  return response.end();
+});
+
 // Starting the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
