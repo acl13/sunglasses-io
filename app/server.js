@@ -43,6 +43,38 @@ app.get("/brands/:id/products", (request, response) => {
   return response.end();
 });
 
+app.post("/login", (request, response) => {
+  const { username, password } = request.body;
+
+  const user = users.find((user) => {
+    return user.login.username == username && user.login.password == password;
+  });
+
+  if (!username || !password) {
+    response.status(401);
+    response.send({ message: "Both a username and password are required" });
+    return response.end();
+  }
+
+  if (user) {
+    response.status(200);
+    response.send(user);
+    return response.end();
+  } else {
+    response.status(401);
+    response.send({ message: "Incorrect username or password" });
+    return response.end();
+  }
+});
+
+// const { username, password } = req.body;
+
+// if (username === 'user' && password === 'password') {
+//   res.status(200).send({ message: 'Login successful' });
+// } else {
+//   res.status(401).send({ message: 'Invalid credentials' });
+// }
+
 // Starting the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

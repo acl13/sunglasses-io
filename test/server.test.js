@@ -54,13 +54,75 @@ describe("Products", () => {
 });
 
 describe("Login", () => {
-  // describe("/POST login", () => {
-  //   it("logs in an authenticated user", (done) => {
-  //get login info from request params
-  //     //Write test logic here
-  //     done();
-  //   });
-  // });
+  describe("/POST login", () => {
+    it("logs in an authenticated user", (done) => {
+      let login = {
+        username: "yellowleopard753",
+        password: "jonjon",
+      };
+
+      chai
+        .request(server)
+        .post("/login")
+        .send(login)
+        .end((err, res) => {
+          res.should.have.status(200);
+          res.body.should.be.an("object");
+          res.body.should.have.property("gender");
+          res.body.should.have.property("cart");
+          res.body.should.have.property("name");
+          res.body.should.have.property("location");
+          res.body.should.have.property("email");
+          res.body.should.have.property("login");
+          res.body.should.have.property("dob");
+          res.body.should.have.property("registered");
+          res.body.should.have.property("phone");
+          res.body.should.have.property("cell");
+          res.body.should.have.property("picture");
+          done();
+        });
+    });
+
+    //add test for error handling
+    it("throws error for incomplete login", (done) => {
+      let login = {
+        username: "Bob",
+      };
+
+      chai
+        .request(server)
+        .post("/login")
+        .send(login)
+        .end((err, res) => {
+          res.should.have.status(401);
+          res.body.should.be.an("object");
+          res.body.message.should.be.a("string");
+          res.body.message.should.be.eql(
+            "Both a username and password are required"
+          );
+          done();
+        });
+    });
+
+    it("throws error for unathorized login", (done) => {
+      let login = {
+        username: "Bob",
+        password: "bobpass",
+      };
+
+      chai
+        .request(server)
+        .post("/login")
+        .send(login)
+        .end((err, res) => {
+          res.should.have.status(401);
+          res.body.should.be.an("object");
+          res.body.message.should.be.a("string");
+          res.body.message.should.be.eql("Incorrect username or password");
+          done();
+        });
+    });
+  });
 });
 
 describe("Cart", () => {
