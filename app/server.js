@@ -13,6 +13,17 @@ const users = require("../initial-data/users.json");
 const brands = require("../initial-data/brands.json");
 const products = require("../initial-data/products.json");
 
+// const authenticate = (req, res, next) => {
+//   try {
+//     const token = req.headers.authorization.split(" ")[1]; // Bearer <token>
+//     const decoded = jwt.verify(token, "secretKey");
+//     req.userId = decoded.userId;
+//     next();
+//   } catch (error) {
+//     res.status(401).json({ message: "Authentication failed" });
+//   }
+// };
+
 // Error handling
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -39,9 +50,18 @@ app.get("/brands/:id/products", (request, response) => {
     return product.categoryId == request.params.id;
   });
 
-  response.send(filteredProducts);
-  return response.end();
+  if (filteredProducts.length === 0) {
+    response.status(404);
+    response.send({ message: "No products found" });
+    return response.end();
+  } else {
+    response.send(filteredProducts);
+    return response.end();
+  }
 });
+
+let token = jwt.sign("user", "secretKey");
+console.log(token);
 
 app.post("/login", (request, response) => {
   const { username, password } = request.body;
@@ -57,7 +77,9 @@ app.post("/login", (request, response) => {
   }
 
   if (user) {
+    let token = jwt.sign({ user }, "secretKey", { expiresIn: "1hr" });
     response.status(200);
+    response.set("Authorization", token);
     response.send(user);
     return response.end();
   } else {
@@ -66,14 +88,6 @@ app.post("/login", (request, response) => {
     return response.end();
   }
 });
-
-// const { username, password } = req.body;
-
-// if (username === 'user' && password === 'password') {
-//   res.status(200).send({ message: 'Login successful' });
-// } else {
-//   res.status(401).send({ message: 'Invalid credentials' });
-// }
 
 // Starting the server
 const PORT = process.env.PORT || 3000;

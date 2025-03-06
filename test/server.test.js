@@ -34,6 +34,18 @@ describe("Brands", () => {
           done();
         });
     });
+
+    it("should return an error if the brand does not exist", (done) => {
+      chai
+        .request(server)
+        .get("/brands/6/products")
+        .end((err, res) => {
+          res.should.have.status(404);
+          res.body.message.should.be.a("string");
+          res.body.message.should.be.eql("No products found");
+          done();
+        });
+    });
   });
 });
 
@@ -67,6 +79,7 @@ describe("Login", () => {
         .send(login)
         .end((err, res) => {
           res.should.have.status(200);
+          res.header.authorization.should.be.a("string");
           res.body.should.be.an("object");
           res.body.should.have.property("gender");
           res.body.should.have.property("cart");
@@ -79,6 +92,7 @@ describe("Login", () => {
           res.body.should.have.property("phone");
           res.body.should.have.property("cell");
           res.body.should.have.property("picture");
+          res.body.should.have.property("nat");
           done();
         });
     });
