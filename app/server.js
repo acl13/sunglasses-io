@@ -112,6 +112,64 @@ app.post("/me/cart", (request, response) => {
   response.send(user.cart);
 });
 
+app.delete("/me/cart/:productId", (request, response) => {
+  const user = getAuthenticatedUser(request);
+  if (!user) {
+    response.status(401);
+    response.send({ message: "Authentication failed" });
+  }
+
+  const product = products.find(
+    (product) => product.id == request.params.productId
+  );
+
+  if (!product) {
+    response.status(404);
+    response.send({ message: "Product not found" });
+  }
+
+  const productIndex = user.cart.indexOf(product);
+  user.cart.splice(productIndex, 1);
+  response.status(200);
+  response.send(user.cart);
+});
+
+app.post("/me/cart/:productId", (request, response) => {
+  const user = getAuthenticatedUser(request);
+  if (!user) {
+    response.status(401);
+    response.send({ message: "Authentication failed" });
+  }
+
+  const product = products.find(
+    (product) => product.id == request.params.productId
+  );
+
+  if (!product) {
+    response.status(404);
+    response.send({ message: "Product not found" });
+  }
+
+  // Something like an "amountInCart" property on each product would be much easier to update, but this is what I could get working with the provided data
+  const currentAmount = user.cart.filter(
+    (product) => product.id == request.params.productId
+  ).length;
+  const desiredAmount = request.body.amount;
+
+  if (desiredAmount > currentAmount) {
+    for (let i = currentAmount; i < desiredAmount; i++) {
+      user.cart.push(product);
+    }
+  } else if (desiredAmount < currentAmount) {
+    for (let i = desiredAmount; i < currentAmount; i++) {
+      const productIndex = user.cart.indexOf(product);
+      user.cart.splice(productIndex, 1);
+    }
+  }
+  response.status(200);
+  response.send(user.cart);
+});
+
 // Starting the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

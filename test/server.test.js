@@ -266,23 +266,156 @@ describe("Cart", () => {
     });
   });
 
-  //
-  // describe("/POST me/cart/:productId", () => {
-  //   it("Updates the quantity of a particular item in the user's cart", (done) => {
-  //     // arrange: login user
-  //     // will need to check cart quantity?
-  //     // write test logic here
-  //     done();
-  //   });
-  // });
-  //
-  //
-  //
-  // describe("/DELETE me/cart/:productId", () => {
-  //   it("deletes an item from the cart", (done) => {
-  //     // arrange: login user
-  //     // write test logic here
-  //     done();
-  //   });
-  // });
+  describe("/POST me/cart/:productId", () => {
+    it("Updates the quantity of a particular item in the user's cart (increase)", (done) => {
+      let login = {
+        username: "lazywolf342",
+        password: "tucker",
+      };
+
+      chai
+        .request(server)
+        .post("/login")
+        .send(login)
+        .end((err, res) => {
+          const token = res.headers.authorization;
+          chai
+            .request(server)
+            .post("/me/cart/2")
+            .set("authorization", token)
+            .send({ amount: 3 })
+            .end((err, res) => {
+              console.log(res.body);
+              res.should.have.status(200);
+              res.body.should.be.an("array");
+              res.body.should.have.length(3);
+              done();
+            });
+        });
+    });
+
+    it("Updates the quantity of a particular item in the user's cart (decrease)", (done) => {
+      let login = {
+        username: "lazywolf342",
+        password: "tucker",
+      };
+
+      chai
+        .request(server)
+        .post("/login")
+        .send(login)
+        .end((err, res) => {
+          const token = res.headers.authorization;
+          chai
+            .request(server)
+            .post("/me/cart/2")
+            .set("authorization", token)
+            .send({ amount: 2 })
+            .end((err, res) => {
+              console.log(res.body);
+              res.should.have.status(200);
+              res.body.should.be.an("array");
+              res.body.should.have.length(2);
+              done();
+            });
+        });
+    });
+
+    it("throws error if product is not in cart", (done) => {
+      let login = {
+        username: "yellowleopard753",
+        password: "jonjon",
+      };
+
+      chai
+        .request(server)
+        .post("/login")
+        .send(login)
+        .end((err, res) => {
+          const token = res.headers.authorization;
+          chai
+            .request(server)
+            .post("/me/cart/13")
+            .set("authorization", token)
+            .end((err, res) => {
+              res.should.have.status(404);
+              res.body.message.should.be.eql("Product not found");
+              done();
+            });
+        });
+    });
+
+    it("throws error if user is not authenticated", (done) => {
+      chai
+        .request(server)
+        .post("/me/cart/1")
+        .end((err, res) => {
+          res.should.have.status(401);
+          res.body.message.should.be.eql("Authentication failed");
+          done();
+        });
+    });
+  });
+
+  describe("/DELETE me/cart/:productId", () => {
+    it("deletes an item from the cart", (done) => {
+      let login = {
+        username: "greenlion235",
+        password: "waters",
+      };
+
+      chai
+        .request(server)
+        .post("/login")
+        .send(login)
+        .end((err, res) => {
+          const token = res.headers.authorization;
+          chai
+            .request(server)
+            .delete("/me/cart/7")
+            .set("authorization", token)
+            .end((err, res) => {
+              res.should.have.status(200);
+              res.body.should.be.an("array");
+              res.body.should.have.length(0);
+              done();
+            });
+        });
+    });
+
+    it("throws error if product is not in cart", (done) => {
+      let login = {
+        username: "yellowleopard753",
+        password: "jonjon",
+      };
+
+      chai
+        .request(server)
+        .post("/login")
+        .send(login)
+        .end((err, res) => {
+          const token = res.headers.authorization;
+          chai
+            .request(server)
+            .delete("/me/cart/13")
+            .set("authorization", token)
+            .end((err, res) => {
+              res.should.have.status(404);
+              res.body.message.should.be.eql("Product not found");
+              done();
+            });
+        });
+    });
+
+    it("throws error if user is not authenticated", (done) => {
+      chai
+        .request(server)
+        .delete("/me/cart/1")
+        .end((err, res) => {
+          res.should.have.status(401);
+          res.body.message.should.be.eql("Authentication failed");
+          done();
+        });
+    });
+  });
 });
