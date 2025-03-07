@@ -151,11 +151,11 @@ describe("Cart", () => {
         .post("/login")
         .send(login)
         .end((err, res) => {
-          const hash = res.body.login.sha256;
+          const token = res.headers.authorization;
           chai
             .request(server)
             .get("/me/cart")
-            .set("Authorization", hash)
+            .set("authorization", token)
             .end((err, res) => {
               res.should.have.status(200);
               res.body.should.be.an("array");
@@ -175,18 +175,97 @@ describe("Cart", () => {
         });
     });
   });
-  //
-  //
-  //
-  // describe("/POST me/cart", () => {
-  //   it("adds an item to user's cart", (done) => {
-  //     //arrange: login user, need product id in request body?
-  //     //write test logic here
-  //     done();
-  //   });
-  // });
-  //
-  //
+
+  describe("/POST me/cart", () => {
+    it("adds an item to user's cart", (done) => {
+      const product = {
+        id: "1",
+        categoryId: "1",
+        name: "Superglasses",
+        description: "The best glasses in the world",
+        price: 150,
+        imageUrls: [
+          "https://image.shutterstock.com/z/stock-photo-yellow-sunglasses-white-backgound-600820286.jpg",
+          "https://image.shutterstock.com/z/stock-photo-yellow-sunglasses-white-backgound-600820286.jpg",
+          "https://image.shutterstock.com/z/stock-photo-yellow-sunglasses-white-backgound-600820286.jpg",
+        ],
+      };
+
+      let login = {
+        username: "yellowleopard753",
+        password: "jonjon",
+      };
+
+      chai
+        .request(server)
+        .post("/login")
+        .send(login)
+        .end((err, res) => {
+          const token = res.headers.authorization;
+          chai
+            .request(server)
+            .post("/me/cart")
+            .set("authorization", token)
+            .send(product)
+            .end((err, res) => {
+              res.should.have.status(200);
+              res.body.should.be.an("array");
+              res.body.should.have.length(1);
+              done();
+            });
+        });
+    });
+
+    it("throws error if product is not in catalog", (done) => {
+      const product = {
+        id: "12",
+        categoryId: "1",
+        name: "Fake glasses",
+        description: "These glasses do not exist",
+        price: 100,
+        imageUrls: [
+          "https://image.shutterstock.com/z/stock-photo-yellow-sunglasses-white-backgound-600820286.jpg",
+          "https://image.shutterstock.com/z/stock-photo-yellow-sunglasses-white-backgound-600820286.jpg",
+          "https://image.shutterstock.com/z/stock-photo-yellow-sunglasses-white-backgound-600820286.jpg",
+        ],
+      };
+
+      let login = {
+        username: "yellowleopard753",
+        password: "jonjon",
+      };
+
+      chai
+        .request(server)
+        .post("/login")
+        .send(login)
+        .end((err, res) => {
+          const token = res.headers.authorization;
+          chai
+            .request(server)
+            .post("/me/cart")
+            .set("authorization", token)
+            .send(product)
+            .end((err, res) => {
+              res.should.have.status(404);
+              res.body.message.should.be.eql("Product not found");
+              done();
+            });
+        });
+    });
+
+    it("throws error if user is not authenticated", (done) => {
+      chai
+        .request(server)
+        .post("/me/cart")
+        .end((err, res) => {
+          res.should.have.status(401);
+          res.body.message.should.be.eql("Authentication failed");
+          done();
+        });
+    });
+  });
+
   //
   // describe("/POST me/cart/:productId", () => {
   //   it("Updates the quantity of a particular item in the user's cart", (done) => {

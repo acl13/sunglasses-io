@@ -58,9 +58,9 @@ app.post("/login", (request, response) => {
   }
 
   if (user) {
-    let hash = user.login.sha256;
+    const token = jwt.sign({ user }, "secretKey", { expiresIn: "1hr" });
+    response.set("authorization", `Bearer ${token}`);
     response.status(200);
-    response.set("Authorization", hash);
     response.send(user);
   } else {
     response.status(401);
@@ -69,14 +69,21 @@ app.post("/login", (request, response) => {
 });
 
 const getAuthenticatedUser = (request) => {
+  const authHeader = request.headers["authorization"];
+  if (!authHeader) {
+    return;
+  }
+  const token = authHeader.split(" ")[1];
+  const decoded = jwt.verify(token, "secretKey");
+
   let authenticatedUser = users.find(
-    (user) => user.login.sha256 == request.headers.authorization
+    (user) => user.login.username == decoded.user.login.username
   );
   return authenticatedUser;
 };
 
 app.get("/me/cart", (request, response) => {
-  let user = getAuthenticatedUser(request);
+  const user = getAuthenticatedUser(request);
   if (!user) {
     response.status(401);
     response.send({ message: "Authentication failed" });
@@ -84,6 +91,25 @@ app.get("/me/cart", (request, response) => {
     response.status(200);
     response.send(user.cart);
   }
+});
+
+app.post("/me/cart", (request, response) => {
+  const user = getAuthenticatedUser(request);
+  if (!user) {
+    response.status(401);
+    response.send({ message: "Authentication failed" });
+  }
+
+  const product = products.find((product) => product.id == request.body.id);
+
+  if (!product) {
+    response.status(404);
+    response.send({ message: "Product not found" });
+  }
+
+  user.cart.push(product);
+  response.status(200);
+  response.send(user.cart);
 });
 
 // Starting the server
