@@ -3,7 +3,7 @@ const bodyParser = require("body-parser");
 const jwt = require("jsonwebtoken");
 const swaggerUi = require("swagger-ui-express");
 const YAML = require("yamljs");
-const swaggerDocument = YAML.load("./swagger.yaml"); // Replace './swagger.yaml' with the path to your Swagger file
+const swaggerDocument = YAML.load("./swagger.yaml");
 const app = express();
 
 app.use(bodyParser.json());
@@ -58,13 +58,9 @@ app.post("/login", (request, response) => {
   }
 
   if (user) {
-    try {
-      let token = jwt.sign({ user }, "secretKey", { expiresIn: "1hr" });
-    } catch (err) {
-      console.log(err);
-    }
+    let hash = user.login.sha256;
     response.status(200);
-    response.set("Authorization", token);
+    response.set("Authorization", hash);
     response.send(user);
   } else {
     response.status(401);
@@ -72,24 +68,18 @@ app.post("/login", (request, response) => {
   }
 });
 
-const authenticateUser = (req, res, next) => {
-  try {
-    const token = req.header.authorization.split(" ")[1]; // Bearer <token>
-    const decoded = jwt.verify(token, "secretKey");
-    req.body.username = decoded.username;
-    next();
-  } catch (error) {
-    res.status(401);
-    res.send({ message: "Authentication failed" });
-  }
+const getAuthenticatedUser = (request) => {
+  let authenticatedUser = users.find(
+    (user) => user.login.sha256 == request.headers.authorization
+  );
+  return authenticatedUser;
 };
 
-app.get("/me/cart", authenticateUser, (request, response) => {
-  const user = users.find((user) => user.username == request.body.username);
-
+app.get("/me/cart", (request, response) => {
+  let user = getAuthenticatedUser(request);
   if (!user) {
-    response.status(404);
-    response.send({ message: "User not found" });
+    response.status(401);
+    response.send({ message: "Authentication failed" });
   } else {
     response.status(200);
     response.send(user.cart);

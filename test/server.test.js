@@ -97,7 +97,6 @@ describe("Login", () => {
         });
     });
 
-    //add test for error handling
     it("throws error for incomplete login", (done) => {
       let login = {
         username: "Bob",
@@ -142,8 +141,6 @@ describe("Login", () => {
 describe("Cart", () => {
   describe("/GET me/cart", () => {
     it("gets the cart for an authenticated user", (done) => {
-      //arrange: login user/get user cart
-      // write test logic here
       let login = {
         username: "yellowleopard753",
         password: "jonjon",
@@ -154,22 +151,20 @@ describe("Cart", () => {
         .post("/login")
         .send(login)
         .end((err, res) => {
-          const token = res.header.authorization.split(".")[1];
-          console.log(token);
+          const hash = res.body.login.sha256;
           chai
             .request(server)
             .get("/me/cart")
-            .set("Authorization", token)
+            .set("Authorization", hash)
             .end((err, res) => {
               res.should.have.status(200);
+              res.body.should.be.an("array");
               done();
             });
         });
     });
 
     it("throws error if user is not authenticated", (done) => {
-      //arrange: login user/get user cart
-      // write test logic here
       chai
         .request(server)
         .get("/me/cart")
